@@ -22,7 +22,7 @@ tracker](https://github.com/share/sharedb/issues).
 - Concurrent multi-user collaboration
 - Synchronous editing API with asynchronous eventual consistency
 - Realtime query subscriptions
-- Simple integration with any database - [MongoDB](https://github.com/share/sharedb-mongo)
+- Simple integration with any database - [MongoDB](https://github.com/share/sharedb-mongo), [PostgresQL](https://github.com/share/sharedb-postgres) (experimental)
 - Horizontally scalable with pub/sub integration - [Redis](https://github.com/share/sharedb-redis-pubsub)
 - Projections to select desired fields from documents and operations
 - Middleware for implementing access control and custom extensions
@@ -84,6 +84,7 @@ __Options__
 * [`ShareDBMingoMemory`](https://github.com/share/sharedb-mingo-memory), backed by
   a non-persistent database supporting most Mongo queries. Useful for faster
   testing of a Mongo-based app.
+* [`ShareDBPostgres`](https://github.com/share/sharedb-postgres), backed by PostgresQL. No query support.
 
 #### Pub/Sub Adapters
 * `ShareDB.MemoryPubSub` can be used with a single process
@@ -140,6 +141,27 @@ Register a new middleware.
   * `id`: The document id being handled
   * `query`: The query object being handled
   * `op`: The op being handled
+
+### Projections
+
+ShareDB supports exposing a *projection* of a real collection, with a specified (limited) set of allowed fields. Once configured, the projected collection looks just like a real collection - except documents only have the fields you've requested. Operations (gets, queries, sets, etc) on the fake collection work, but you only see a small portion of the data.
+
+`addProjection(name, collection, fields)`
+Configure a projection.
+
+ * `name` The name of the projected collection.
+ * `collection` The name of the existing collection.
+ * `fields` A map (object) of the allowed fields in documents.
+   * Keys are field names.
+   * Values should be `true`.
+
+For example, you could make a `users_limited` projection which lets users view each other's names and profile pictures, but not password hashes. You would configure this by calling:
+
+```js
+share.addProjection('users_limited', 'users', { name:true, profileUrl:true });
+```
+
+Note that only the [JSON0 OT type](https://github.com/ottypes/json0) is supported for projections.
 
 ### Shutdown
 
@@ -228,6 +250,9 @@ The document was deleted. Document contents before deletion are passed in as an 
 
 `doc.on('error', function(err) {...})`
 There was an error fetching the document or applying an operation.
+
+`doc.removeListener(eventName, listener)`
+Removes any listener you added with `doc.on`. `eventName` should be one of `'load'`, `'create'`, `'before op'`, `'op'`, `'del'`, or `'error'`. `listener` should be the function you passed in as the second argument to `on`. Note that both `on` and `removeListener` are inherited from [EventEmitter](https://nodejs.org/api/events.html#events_class_eventemitter).
 
 `doc.create(data[, type][, options][, function(err) {...}])`
 Create the document locally and send create operation to the server.
