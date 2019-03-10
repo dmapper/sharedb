@@ -112,7 +112,7 @@ Community Provided Pub/Sub Adapters
 ### Listening to WebSocket connections
 
 ```js
-var WebSocketJSONStream = require('websocket-json-stream');
+var WebSocketJSONStream = require('@teamwork/websocket-json-stream');
 
 // 'ws' is a websocket server connection, as passed into
 // new (require('ws').Server).on('connection', ...)
@@ -257,6 +257,27 @@ Get a read-only snapshot of a document at the requested version.
   ID of the snapshot
 * `version` _(number) [optional]_
   The version number of the desired snapshot
+* `callback` _(Function)_
+  Called with `(error, snapshot)`, where `snapshot` takes the following form:
+
+  ```javascript
+  {
+    id: string;         // ID of the snapshot
+    v: number;          // version number of the snapshot
+    type: string;       // the OT type of the snapshot, or null if it doesn't exist or is deleted
+    data: any;          // the snapshot
+  }
+  ```
+
+`connection.fetchSnapshotByTimestamp(collection, id, timestamp, callback): void;`
+Get a read-only snapshot of a document at the requested version.
+
+* `collection` _(String)_
+  Collection name of the snapshot
+* `id` _(String)_
+  ID of the snapshot
+* `timestamp` _(number) [optional]_
+  The timestamp of the desired snapshot. The returned snapshot will be the latest snapshot before the provided timestamp
 * `callback` _(Function)_
   Called with `(error, snapshot)`, where `snapshot` takes the following form:
 
@@ -464,3 +485,5 @@ The `41xx` and `51xx` codes are reserved for use by ShareDB DB adapters, and the
 * 5018 - Required QueryEmitter listener not assigned
 * 5019 - getMilestoneSnapshot MilestoneDB method unimplemented
 * 5020 - saveMilestoneSnapshot MilestoneDB method unimplemented
+* 5021 - getMilestoneSnapshotAtOrBeforeTime MilestoneDB method unimplemented
+* 5022 - getMilestoneSnapshotAtOrAfterTime MilestoneDB method unimplemented
